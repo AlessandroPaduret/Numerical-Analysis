@@ -1,2 +1,2 @@
 # Numerical-Analysis
-The project must be difined
+The project must be defined

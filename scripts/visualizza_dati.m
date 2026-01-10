@@ -1,38 +1,59 @@
-%% Script di Animazione della Diffusione
+%% Script di Confronto Diffusione: Originale vs Ricostruito
 load('dati_sintetici.mat'); % Carica A, t, U, m, M
+% Assumiamo che A_rec sia già stata calcolata e salvata
+load('A_rec.mat'); 
 
-% Scegliamo un esperimento specifico da visualizzare (es. il primo)
 esperimento = 1;
+% Creiamo i grafi
+G_orig = graph(A);
+G_rec = graph(A_rec);
 
-% Creiamo l'oggetto grafo di Matlab
-G = graph(A);
+% Prepariamo la figura con due pannelli (1 riga, 2 colonne)
+figure('Color', 'w', 'Position', [100, 100, 1200, 500]);
 
-% Prepariamo la figura
-figure('Color', 'w');
-h = plot(G, 'Layout', 'force'); % Layout 'force' mantiene i nodi in posizioni fisse
-title(sprintf('Diffusione del Calore - Esperimento %d', esperimento));
-colorbar; % Mostra la scala del calore
-axis off;
+% --- GRAFO ORIGINALE ---
+subplot(1,2,1);
+% Calcoliamo il layout una volta sola e lo salviamo
+h1 = plot(G_orig, 'Layout', 'force');
+% Salviamo le coordinate dei nodi per usarle nel secondo grafico
+x_coords = h1.XData;
+y_coords = h1.YData;
 
-% Determiniamo i limiti dei colori per mantenere la scala costante
-tutti_i_valori = cell2mat(U); 
-c_min = min(tutti_i_valori(:));
-c_max = max(tutti_i_valori(:));
-clim([c_min, c_max]);
+title('Grafo Originale (Verità)');
+colorbar;
+clim([min(U{1}(:)), max(U{1}(:))]);
+axis tight; axis off;
 
-% Ciclo per l'animazione
+% --- GRAFO RICOSTRUITO ---
+subplot(1,2,2);
+% Usiamo le STESSE coordinate (x_coords, y_coords)
+h2 = plot(G_rec, 'XData', x_coords, 'YData', y_coords);
+
+title('Grafo Ricostruito (A\_rec)');
+colorbar;
+clim([min(U{1}(:)), max(U{1}(:))]);
+axis tight; axis off;
+
+% Conta quanti archi hai azzeccato rispetto alla matrice A originale
+errori = sum(sum(abs(A_rec - A))); 
+accuratezza = 1 - (errori / numel(A));
+fprintf('Accuratezza della ricostruzione: %.2f%%\n', accuratezza * 100);
+
+%% Animazione (Ciclo sui passi temporali)
+% Eseguiamo l'animazione su entrambi contemporaneamente
 while true
-    for k = 1:length(t)
-        % Estraiamo i valori di calore per tutti i nodi al tempo k
-        calore_nodi = U{k}(:, esperimento);
-        
-        % Aggiorniamo i colori dei nodi nel grafico
-        h.NodeCData = calore_nodi;
-        
-        % Aggiorniamo il titolo con il tempo corrente
-        title(sprintf('Diffusione al tempo t = %.3f', t(k)));
-        
-        % Pausa per rendere l'animazione fluida
-        pause(0.1); 
-    end
+for k = 1:length(U)
+    % Estraiamo le temperature al tempo k per l'esperimento scelto
+    temp_k = U{k}(:, esperimento); 
+    
+    % Aggiorniamo i colori dei nodi in entrambi i grafici
+    h1.NodeCData = temp_k;
+    h2.NodeCData = temp_k;
+    
+    % Aggiorniamo il titolo con il tempo corrente
+    sgtitle(sprintf('Evoluzione Temporale - t = %.2f', t(k)));
+    
+    drawnow; % Forza il disegno a video
+    pause(0.05); % Piccola pausa per l'effetto animazione
+end
 end

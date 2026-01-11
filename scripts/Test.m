@@ -3,6 +3,8 @@ clear
 
 genera_dati
 
-solutore_1
+solutore_2
+
+statistiche
 
 visualizza_dati

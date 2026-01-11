@@ -1,9 +1,8 @@
 %% Script di Confronto Diffusione: Originale vs Ricostruito
-load('dati_sintetici.mat'); % Carica A, t, U, m, M
+load('dati_sintetici.mat'); % Carica A, t, U, n_nodi, n_esperimenti
 % Assumiamo che A_rec sia già stata calcolata e salvata
 load('A_rec.mat'); 
 
-esperimento = 1;
 % Creiamo i grafi
 G_orig = graph(A);
 G_rec = graph(A_rec);
@@ -34,26 +33,23 @@ colorbar;
 clim([min(U{1}(:)), max(U{1}(:))]);
 axis tight; axis off;
 
-% Conta quanti archi hai azzeccato rispetto alla matrice A originale
-errori = sum(sum(abs(A_rec - A))); 
-accuratezza = 1 - (errori / numel(A));
-fprintf('Accuratezza della ricostruzione: %.2f%%\n', accuratezza * 100);
-
 %% Animazione (Ciclo sui passi temporali)
 % Eseguiamo l'animazione su entrambi contemporaneamente
 while true
-for k = 1:length(U)
-    % Estraiamo le temperature al tempo k per l'esperimento scelto
-    temp_k = U{k}(:, esperimento); 
-    
-    % Aggiorniamo i colori dei nodi in entrambi i grafici
-    h1.NodeCData = temp_k;
-    h2.NodeCData = temp_k;
-    
-    % Aggiorniamo il titolo con il tempo corrente
-    sgtitle(sprintf('Evoluzione Temporale - t = %.2f', t(k)));
-    
-    drawnow; % Forza il disegno a video
-    pause(0.05); % Piccola pausa per l'effetto animazione
-end
+    for esperimento=1:n_esperimenti
+        for k = 1:length(U)
+            % Estraiamo le temperature al tempo k per l'esperimento scelto
+            temp_k = U{k}(:, esperimento); 
+            
+            % Aggiorniamo i colori dei nodi in entrambi i grafici
+            h1.NodeCData = temp_k;
+            h2.NodeCData = temp_k;
+            
+            % Aggiorniamo il titolo con il tempo corrente
+            sgtitle(sprintf('Evoluzione Temporale - t = %.2f', t(k)));
+            
+            drawnow; % Forza il disegno a video
+            pause(0.05); % Piccola pausa per l'effetto animazione
+        end
+    end
 end

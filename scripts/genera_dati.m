@@ -1,12 +1,14 @@
 %% 1. Parametri del Problema
-n_nodi = 37;                    % Numero di nodi (vertici)
-n_esperimenti = 67;             % Numero di esperimenti (M >= m per il Problema 1)
-t_finale = 0.8;                 % Tempo finale di osservazione (piccolo per l'euristica)
-n_t = 10;                       % Numero di istanti temporali
+k = 100; % ordine di grandezza
+
+n_nodi = k;                     % Numero di nodi (vertici)
+n_esperimenti = ceil(k/2);      % Numero di esperimenti (M >= m per il Problema 1)
+t_finale = 0.1;                 % Tempo finale di osservazione (piccolo per l'euristica)
+n_t = 50;                       % Numero di istanti temporali
 t = linspace(0, t_finale, n_t); % Vettore dei tempi
 
 %% 2. Generazione del Grafo e del Laplaciano
-prob_edge = 1; 
+prob_edge = 0.3; 
 A = double(rand(n_nodi,n_nodi) < prob_edge);  % imposta 1 se superata probabilità 0 altrimenti
 A = triu(A,1); % triangolare superiore scartando la diagonale
 A = A | A'; % Rendiamo la matrice simmetrica (grafo non orientato)
@@ -36,11 +38,11 @@ for k = 2:n_t
     U{k} = Q * exp_Lambda_t * Q' * U{1};
     
     % (Opzionale) Aggiunta di rumore bianco per testare la robustezza
-    % rumore = 1e-4 * randn(m, M);
-    % U{k} = U{k} + rumore;
+    rumore = 1e-4 * randn(n_nodi, n_esperimenti); 
+    U{k} = U{k} + rumore;
 end
 
 %% 5. Salvataggio dei Dati
 % Questi sono i file che useranno Solutore1 e Solutore2
-save('dati_sintetici.mat', 'A', 't', 'U', 'n_nodi', 'n_esperimenti');
+save('dati_sintetici.mat', 'A', 't', 'U', 'n_nodi', 'n_esperimenti', 'n_t', '-v7.3');
 fprintf('Dati sintetici generati e salvati correttamente.\n');

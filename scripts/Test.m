@@ -1,7 +1,7 @@
 
 clear
 
-genera_dati
+genera_dati_diffusione
 
 solutore_2
 

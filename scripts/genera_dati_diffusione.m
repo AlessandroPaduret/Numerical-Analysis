@@ -6,7 +6,7 @@ function [A, t, U] = genera_dati_diffusione(options)
         options.n_esperimenti (1,1) double = NaN    % Default dinamico
         options.n_t (1,1) double = 50               % Numero di istanti temporali
         options.t_finale (1,1) double = 0.1         % Tempo finale di osservazione (piccolo per l'euristica)
-        options.soglia_level (1,1) double = 1e-4    % Ordine di grandezza del rumore
+        options.soglia_rumore (1,1) double = 1e-4    % Ordine di grandezza del rumore
         options.prob_edge (1,1) double = 0.3        % Probabilità di creare un arco 
     end
     
@@ -22,7 +22,7 @@ function [A, t, U] = genera_dati_diffusione(options)
     t = linspace(0, t_finale, n_t); % Vettore dei tempi
     
     %% 2. Generazione del Grafo e del Laplaciano
-    prob_edge = options.soglia_level; 
+    prob_edge = options.prob_edge; 
     A = double(rand(n_nodi,n_nodi) < prob_edge);  % imposta 1 se superata probabilità 0 altrimenti
     A = triu(A,1); % triangolare superiore scartando la diagonale
     A = A | A'; % Rendiamo la matrice simmetrica (grafo non orientato)
@@ -43,16 +43,18 @@ function [A, t, U] = genera_dati_diffusione(options)
     % Usiamo la formula: u(t) = Q * exp(-Lambda * t) * Q' * u(0)
     % Calcoliamo l'evoluzione per ogni istante temporale k
     
+    Qt = Q';
+
     for k = 2:n_t
         
         % Calcoliamo la matrice esponenziale e^(-Lambda * t)
         exp_Lambda_t = diag(exp(-diag(Lambda) * t(k)));
         
         % Calcoliamo lo snapshot al tempo k per tutti gli M esperimenti
-        U{k} = Q * exp_Lambda_t * Q' * U{1};
+        U{k} = Q * exp_Lambda_t * Qt * U{1};
         
         % (Opzionale) Aggiunta di rumore bianco per testare la robustezza
-        rumore = 1e-4 * randn(n_nodi, n_esperimenti); 
+        rumore = options.soglia_rumore * randn(n_nodi, n_esperimenti); 
         U{k} = U{k} + rumore;
     end
     

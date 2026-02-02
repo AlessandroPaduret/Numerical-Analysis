@@ -20,9 +20,9 @@ function [A, t, U] = genera_dati_diffusione(options)
     t_finale = options.t_finale;
     n_t = options.n_t;
     t = linspace(0, t_finale, n_t); % Vettore dei tempi
+    prob_edge = options.prob_edge; 
     
     %% 2. Generazione del Grafo e del Laplaciano
-    prob_edge = options.prob_edge; 
     A = double(rand(n_nodi,n_nodi) < prob_edge);  % imposta 1 se superata probabilità 0 altrimenti
     A = triu(A,1); % triangolare superiore scartando la diagonale
     A = A | A'; % Rendiamo la matrice simmetrica (grafo non orientato)
@@ -43,7 +43,7 @@ function [A, t, U] = genera_dati_diffusione(options)
     % Usiamo la formula: u(t) = Q * exp(-Lambda * t) * Q' * u(0)
     % Calcoliamo l'evoluzione per ogni istante temporale k
     
-    Qt = Q';
+    Qt = Q'; %salviamo Q trasposta per non ricalcolarla dentro il ciclo
 
     for k = 2:n_t
         
@@ -57,9 +57,5 @@ function [A, t, U] = genera_dati_diffusione(options)
         rumore = options.soglia_rumore * randn(n_nodi, n_esperimenti); 
         U{k} = U{k} + rumore;
     end
-    
-    %% 5. Salvataggio dei Dati
-    % Questi sono i file che useranno Solutore1 e Solutore2
-    save('dati_sintetici.mat', 'A', 't', 'U', 'n_nodi', 'n_esperimenti', 'n_t', '-v7.3');
-    fprintf('Dati sintetici generati e salvati correttamente.\n');
+
 end

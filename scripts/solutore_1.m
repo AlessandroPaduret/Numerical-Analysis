@@ -1,4 +1,3 @@
-
 function [A_rec] = solutore_1(U, t, options)
     
     %% 1. Parametri del Problema
@@ -11,36 +10,35 @@ function [A_rec] = solutore_1(U, t, options)
     n_nodi = size(U{1},1);
 
     %% 2. Calcolo traiettorie
-    % calcolo le c_i di ogni vertice così da simulare lui come unico nodo caldo
-    % delle rete
-    c = U{1} \ eye(n_nodi);
+    % risolva Uc = I
+    c = pinv(U{1});
     
-    % Calcoliamo le derivate U{1}*c(:,i) - U{2}*c(:,i) / dt
-    dt = t(2)-t(1);
-    derivate = -(U{1} * c - U{2} * c) / dt;
-    
+    % Calcoliamo le derivate (U{2}*c - U{1}*c) / dt
+    % nota: U{1}*c = I per come è definita c
+    dt = t(2) - t(1);
+    A_pesata = (U{2} * c - eye(n_nodi)) / dt;
+
     %% 3. Costruzione grafo
     
     % Preallochiamo la memoria per ricostruzione grafo
     A_rec = zeros(n_nodi, n_nodi); % Matrice di adiacenza da ricostruire
     
     % imposta la diag(derivate) = 0 perché un useriemo il kmeans per capire 
-    % nodi vicini e lontani ma vogliamo escludere che nodo non può collegarsi a se stesso 
-    derivate(1:n_nodi+1:end) = 0;
+    A_pesata(1:n_nodi+1:end) = 0;
     
     % rendiamo simmetrica le derivate per evitare grafo orientato
-    derivate = (derivate + derivate') / 2;
+    A_pesata = (A_pesata + A_pesata') / 2;
     
     % per ogni vertice 
     for i = 1:n_nodi
 
         % Salta se le derivate sono troppo piccole(significa solo rumore)
-        if max(derivate(:,i)) < options.soglia_rumore
+        if max(A_pesata(:,i)) < options.soglia_rumore
             continue;
         end
 
         % etichetto nodi vicini da lontani
-        [idx, C] = kmeans(derivate(:,i), 2);
+        [idx, C] = kmeans(A_pesata(:,i), 2);
     
         % il cluster con il valore medio più alto è quello dei vicini
         [~, cluster_vicini] = max(C); % la ~ scarta il valore max perchè ci interessa solo l'indice
@@ -53,7 +51,4 @@ function [A_rec] = solutore_1(U, t, options)
     A_rec = A_rec & A_rec'; 
     A_rec(1:n_nodi+1:end) = 0;
     
-    % Salviamo la soluzione
-    save('A_rec.mat', 'A_rec'); % Salva la matrice di adiacenza ricostruita
-
 end

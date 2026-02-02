@@ -2,13 +2,13 @@ function [A_rec] = solutore_vettorizzato(U, t, options)
     arguments
         U (:,:) cell
         t (:,1) double
-        options.soglia_rumore (1,1) double = 1e-8
-        options.k (1,1) double = 5    
+        options.soglia_rumore (1,1) double = 1e-6
+        options.window (1,1) double = 5    
         options.step (1,1) double = 1 
     end
     
     %% 1. Parametri e Dimensioni
-    k = round(options.k);
+    k = round(options.window);
     step = round(options.step);
     [n_nodi, n_esp] = size(U{1});
     n_t = length(U);
@@ -34,7 +34,7 @@ function [A_rec] = solutore_vettorizzato(U, t, options)
     %% 3. Regressione Lineare Vettoriale (Il "Backslash" Magico)
     % Trasformiamo U_sub in [k x (n_nodi * n_esp * n_fin)]
     % Vogliamo il tempo (k) sulle righe per usare T_mat \ U
-    U_to_reg = reshape(permute(U_sub, [3, 1, 2, 4]), k, []);
+    U_to_reg = reshape(permute(U_sub, [3, 1, 2, 4]), k, n_nodi*n_esp*n_fin);
     
     % Matrice del tempo locale (assumendo dt costante per semplicità di vettorizzazione)
     % Se t non è lineare, la regressione vettoriale richiede matrici a blocchi,
@@ -54,16 +54,16 @@ function [A_rec] = solutore_vettorizzato(U, t, options)
     U_accumulata = reshape(mean(U_sub, 3), n_nodi, n_esp * n_fin);
 
     %% 4. Proiezione e Ricostruzione
-    c = pinv(U_accumulata, 1e-5); 
-    derivate = m_accumulata * c;
+    c = pinv(U_accumulata, options.soglia_rumore); 
+    A_pesata = m_accumulata * c;
     
     % Pulizia
-    derivate(1:n_nodi+1:end) = 0;
-    derivate = max(0, (derivate + derivate') / 2);
+    A_pesata(1:n_nodi+1:end) = 0;
+    A_pesata = max(0, (A_pesata + A_pesata') / 2);
     
     %% 5. K-means (L'unica parte necessariamente iterativa sui nodi)
     % Trasformiamo la matrice in un vettore colonna di tutti i possibili archi
-    v_global = derivate(:); 
+    v_global = A_pesata(:); 
     
     % K-means su tutti gli archi contemporaneamente
     [idx_global, C] = kmeans(v_global, 2, 'Replicates', 5);

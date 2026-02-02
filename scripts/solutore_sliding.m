@@ -4,30 +4,36 @@ function [A_rec] = solutore_sliding(U, t, options)
         U (:,:) cell
         t (:,1) double
         options.soglia_rumore (1,1) double = 1e-8
-        options.k (1,1) double = 5    % Ampiezza finestra
+        options.window (1,1) double = 5    % Ampiezza finestra
         options.step (1,1) double = 1 % Salto tra una finestra e l'altra
     end
     
-    k = round(options.k);
+    window = round(options.window);
     step = round(options.step);
     [n_nodi, n_esperimenti] = size(U{1});
     n_t = length(U);
     
-    % Prepariamo i contenitori per accumulare i dati di tutte le finestre
-    m_accumulata = zeros(n_nodi, n_esperimenti* length(1 : step : (n_t - k + 1)));
-    U_accumulata = zeros(n_nodi, n_esperimenti* length(1 : step : (n_t - k + 1)));
+    % Calcoliamo quante finestre (esperimenti virtuali) avremo
+    istanti_inizio = 1 : step : (n_t - k + 1);
+    n_finestre = length(istanti_inizio);
+    n_tot_colonne = n_esperimenti * n_finestre;
+    
+    % --- PREALLOCAZIONE ---
+    % Prepariamo i "contenitori" giganti con le dimensioni finali
+    m_accumulata = zeros(n_nodi, n_tot_colonne);
+    U_accumulata = zeros(n_nodi, n_tot_colonne);));
     
     % 1. SLIDING WINDOW: facciamo scorrere la finestra su tutto il tempo n_t
     % Ci fermiamo a n_t - k per non uscire dai bordi
-    for start_t = 1 : step : (n_t - k + 1)
+    for start_t = 1 : n_finestre
         
-        idx_window = start_t : (start_t + k - 1);
+        idx_window = start_t : (start_t + window - 1);
         t_window = t(idx_window);
         
         % Regressione locale per questa specifica finestra
-        T_mat = [t_window, ones(k, 1)];
+        T_mat = [t_window, ones(window, 1)];
         U_tensor_k = cat(3, U{idx_window});
-        U_history = reshape(permute(U_tensor_k, [3, 1, 2]), k, []);
+        U_history = reshape(permute(U_tensor_k, [3, 1, 2]), window, []);
         
         B = T_mat \ U_history;
         

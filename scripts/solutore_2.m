@@ -22,7 +22,7 @@ function [A_rec] = solutore_2(U, t, options)
     
     % Calcoliamo le derivate U{1}*c(:,i) - U{2}*c(:,i) / dt
     dt = t(2)-t(1);
-    L = (U_big_1 * c - U_big_0 * c) / dt;
+    L = (U_big_1 * c - eye(n_nodi)) / dt;
     
     %% 3. Costruzione grafo
     

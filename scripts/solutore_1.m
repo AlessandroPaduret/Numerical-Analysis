@@ -16,7 +16,7 @@ function [A_rec] = solutore_1(U, t, options)
     % Calcoliamo le derivate (U{2}*c - U{1}*c) / dt
     % nota: U{1}*c = I per come è definita c
     dt = t(2) - t(1);
-    A_pesata = (U{2} * c - eye(n_nodi)) / dt;
+    L = (U{2} * c - eye(n_nodi)) / dt;
 
     %% 3. Costruzione grafo
     
@@ -24,21 +24,21 @@ function [A_rec] = solutore_1(U, t, options)
     A_rec = zeros(n_nodi, n_nodi); % Matrice di adiacenza da ricostruire
     
     % imposta la diag(derivate) = 0 perché un useriemo il kmeans per capire 
-    A_pesata(1:n_nodi+1:end) = 0;
+    L(1:n_nodi+1:end) = 0;
     
     % rendiamo simmetrica le derivate per evitare grafo orientato
-    A_pesata = (A_pesata + A_pesata') / 2;
+    L = (L + L') / 2;
     
     % per ogni vertice 
     for i = 1:n_nodi
 
         % Salta se le derivate sono troppo piccole(significa solo rumore)
-        if max(A_pesata(:,i)) < options.soglia_rumore
+        if max(L(:,i)) < options.soglia_rumore
             continue;
         end
 
         % etichetto nodi vicini da lontani
-        [idx, C] = kmeans(A_pesata(:,i), 2);
+        [idx, C] = kmeans(L(:,i), 2);
     
         % il cluster con il valore medio più alto è quello dei vicini
         [~, cluster_vicini] = max(C); % la ~ scarta il valore max perchè ci interessa solo l'indice

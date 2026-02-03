@@ -60,15 +60,15 @@ function [A_rec] = solutore_sliding(U, t, options)
     c = pinv(U_accumulata, options.soglia_rumore); 
     
     % derivate: [n_nodi x n_nodi]
-    A_pesata = m_accumulata * c;
+    L = m_accumulata * c;
     
     %% 3. Post-Processing (K-means)
     L(1:n_nodi+1:end) = 0;
-    A_pesata = max(0, (A_pesata + A_pesata') / 2);
+    L = max(0, (L + L') / 2);
     
     %% 5. K-means (L'unica parte necessariamente iterativa sui nodi)
     % Trasformiamo la matrice in un vettore colonna di tutti i possibili archi
-    v_global = A_pesata(:); 
+    v_global = L(:); 
     
     % K-means su tutti gli archi contemporaneamente
     [idx_global, C] = kmeans(v_global, 2, 'Replicates', 5);

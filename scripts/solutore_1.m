@@ -35,18 +35,16 @@ function [A_rec] = solutore_1(U, t, options)
     % Per ogni vertice 
     for i = 1:n_nodi
         % Salta se le derivate sono troppo piccole (significa solo rumore)
-        if max(L(:,i)) < options.soglia_rumore
-            continue;
+        if max(L(:,i)) > options.soglia_rumore
+            % Etichetto nodi vicini da lontani
+            [idx, C] = kmeans(L(:,i), 2);
+        
+            % Il cluster con il valore medio più alto è quello dei vicini
+            [~, cluster_vicini] = max(C); % la ~ scarta il valore max perchè ci interessa solo l'indice
+        
+            % Se il nodo è vicino imposta 1 nella matrice adiacenze
+            A_rec(i, :) = (idx == cluster_vicini);
         end
-
-        % Etichetto nodi vicini da lontani
-        [idx, C] = kmeans(L(:,i), 2);
-    
-        % Il cluster con il valore medio più alto è quello dei vicini
-        [~, cluster_vicini] = max(C); % la ~ scarta il valore max perchè ci interessa solo l'indice
-    
-        % Se il nodo è vicino imposta 1 nella matrice adiacenze
-        A_rec(i, :) = (idx == cluster_vicini);
     end
     
     % Rendiamo simmetrico il grafo (elimina falsi positivi)

@@ -58,7 +58,7 @@ function [A_rec] = solutore_sliding(U, t, options)
     % Derivate: [n_nodi x n_nodi]
     L = m_accumulata * c;
     
-    %% Post-Processing (K-means)
+    %% K-means
     L(1:n_nodi+1:end) = 0;
     L = max(0, (L + L') / 2);
     

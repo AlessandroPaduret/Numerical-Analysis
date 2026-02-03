@@ -6,7 +6,7 @@ function visualizza_dati(U, t, A, A_rec, options)
 
     %% Setup dati
     [n_nodi, ~] = size(U{1}); % Prendiamo il numero dei nodi tramite il numero di righe della prima matrice della cell U
-    c_mat = pinv(U{1}, 1e-5); % Matrice per i Ping
+    c_mat = pinv(U{1}, 1e-5); % Matrice per i ping
     x_coords = []; % Placeholder per coordinate x
     y_coords = []; % Placeholder per coordinate y
     CLIM_RANGE = [-0.1, 0.8]; % Scala colori fissa: da rosso scuro (caldo) a blu scuro (freddo)

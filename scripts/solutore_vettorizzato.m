@@ -7,7 +7,7 @@ function [A_rec] = solutore_vettorizzato(U, t, options)
         options.step (1,1) double = 1 
     end
     
-    %% 1. Parametri e Dimensioni
+    %% Parametri e dimensioni
     k = round(options.window);
     step = round(options.step);
     [n_nodi, n_esp] = size(U{1});
@@ -17,7 +17,7 @@ function [A_rec] = solutore_vettorizzato(U, t, options)
     starts = 1 : step : (n_t - k + 1);
     n_fin = length(starts);
     
-    %% 2. Creazione del Super-Tensore [n_nodi x n_esp x k x n_finestre]
+    %% Creazione del Super-Tensore [n_nodi x n_esp x k x n_finestre]
     % Concateniamo tutta la cell in un unico blocco 3D [N x E x T]
     U_full = cat(3, U{:}); 
     
@@ -29,9 +29,7 @@ function [A_rec] = solutore_vettorizzato(U, t, options)
     U_sub = U_full(:, :, idx_map(:));
     U_sub = reshape(U_sub, n_nodi, n_esp, k, n_fin);
 
-    
-
-    %% 3. Regressione Lineare Vettoriale (Il "Backslash" Magico)
+    %% Regressione lineare vettoriale
     % Trasformiamo U_sub in [k x (n_nodi * n_esp * n_fin)]
     % Vogliamo il tempo (k) sulle righe per usare T_mat \ U
     U_to_reg = reshape(permute(U_sub, [3, 1, 2, 4]), k, n_nodi*n_esp*n_fin);
@@ -53,7 +51,7 @@ function [A_rec] = solutore_vettorizzato(U, t, options)
     % U_media: media lungo la dimensione k (la 3°) del tensore originale
     U_accumulata = reshape(mean(U_sub, 3), n_nodi, n_esp * n_fin);
 
-    %% 4. Proiezione e Ricostruzione
+    %% Proiezione e Ricostruzione
     % A_pesata = m_accumulata * pinv(U_accumulata, options.soglia_rumore); 
     L = m_accumulata / U_accumulata;
     
@@ -61,7 +59,7 @@ function [A_rec] = solutore_vettorizzato(U, t, options)
     L(1:n_nodi+1:end) = 0;
     L = max(0, (L + L') / 2);
     
-    %% 5. K-means (L'unica parte necessariamente iterativa sui nodi)
+    %% K-means
     % Trasformiamo la matrice in un vettore colonna di tutti i possibili archi
     v_global = L(:); 
     

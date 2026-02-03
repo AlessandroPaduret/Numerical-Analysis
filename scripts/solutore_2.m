@@ -33,7 +33,7 @@ function [A_rec] = solutore_2(U, t, options)
     
     % imposta la diag(derivate) = 0 perché un useriemo il kmeans per capire 
     % nodi vicini e lontani ma vogliamo escludere che nodo non può collegarsi a se stesso 
-    A_pderivateesata(1:n_nodi+1:end) = 0;
+    A_pesata(1:n_nodi+1:end) = 0;
     
     A_pesata(A_pesata < 0) = 0; % Se una derivata è negativa => derivata=0
     

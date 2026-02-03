@@ -54,16 +54,16 @@ function [A_rec] = solutore_vettorizzato(U, t, options)
     U_accumulata = reshape(mean(U_sub, 3), n_nodi, n_esp * n_fin);
 
     %% 4. Proiezione e Ricostruzione
-    c = pinv(U_accumulata, options.soglia_rumore); 
-    A_pesata = m_accumulata * c;
+    % A_pesata = m_accumulata * pinv(U_accumulata, options.soglia_rumore); 
+    L = m_accumulata / U_accumulata;
     
     % Pulizia
-    A_pesata(1:n_nodi+1:end) = 0;
-    A_pesata = max(0, (A_pesata + A_pesata') / 2);
+    L(1:n_nodi+1:end) = 0;
+    L = max(0, (L + L') / 2);
     
     %% 5. K-means (L'unica parte necessariamente iterativa sui nodi)
     % Trasformiamo la matrice in un vettore colonna di tutti i possibili archi
-    v_global = A_pesata(:); 
+    v_global = L(:); 
     
     % K-means su tutti gli archi contemporaneamente
     [idx_global, C] = kmeans(v_global, 2, 'Replicates', 5);

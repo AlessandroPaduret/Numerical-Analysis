@@ -22,7 +22,7 @@ function [A_rec] = solutore_2(U, t, options)
     
     % Calcoliamo le derivate U{1}*c(:,i) - U{2}*c(:,i) / dt
     dt = t(2)-t(1);
-    A_pesata = (U_big_1 * c - U_big_0 * c) / dt;
+    L = (U_big_1 * c - U_big_0 * c) / dt;
     
     %% 3. Costruzione grafo
     
@@ -33,20 +33,20 @@ function [A_rec] = solutore_2(U, t, options)
     
     % imposta la diag(derivate) = 0 perché un useriemo il kmeans per capire 
     % nodi vicini e lontani ma vogliamo escludere che nodo non può collegarsi a se stesso 
-    A_pesata(1:n_nodi+1:end) = 0;
+    L(1:n_nodi+1:end) = 0;
     
-    A_pesata(A_pesata < 0) = 0; % Se una derivata è negativa => derivata=0
+    L(L < 0) = 0; % Se una derivata è negativa => derivata=0
     
     % rendiamo simmetrica le derivate per evitare grafo orientato
-    A_pesata = (A_pesata + A_pesata') / 2;
+    L = (L + L') / 2;
     
     % per ogni vertice 
     for i = 1:n_nodi
     
         % Salta se le derivate sono troppo piccole(significa solo rumore)
-        if max(A_pesata(:,i)) > options.soglia_rumore
+        if max(L(:,i)) > options.soglia_rumore
             % etichetto nodi vicini da lontani
-            [idx, C] = kmeans(A_pesata(:,i), 2);
+            [idx, C] = kmeans(L(:,i), 2);
         
             % il cluster con il valore medio più alto è quello dei vicini
             [~, cluster_vicini] = max(C); % la ~ scarta il valore max perchè ci interessa solo l'indice

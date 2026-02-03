@@ -34,7 +34,7 @@ function [A_rec] = solutore_sliding(U, t, options)
         T_mat = [t_window, ones(window, 1)];
         U_tensor_k = cat(3, U{idx_window});
         U_history = reshape(permute(U_tensor_k, [3, 1, 2]), window, n_nodi*n_esperimenti);
-        
+        % T_mat * B = U_history
         B = pinv(T_mat, options.soglia_rumore) * U_history;
         
         % Pendenza locale m: [n_nodi x n_esperimenti]
@@ -63,7 +63,7 @@ function [A_rec] = solutore_sliding(U, t, options)
     A_pesata = m_accumulata * c;
     
     %% 3. Post-Processing (K-means)
-    A_pesata(1:n_nodi+1:end) = 0;
+    L(1:n_nodi+1:end) = 0;
     A_pesata = max(0, (A_pesata + A_pesata') / 2);
     
     %% 5. K-means (L'unica parte necessariamente iterativa sui nodi)

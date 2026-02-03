@@ -1,13 +1,13 @@
-function [A, t, U] = genera_dati_diffusione(options)
-    
-    %% 1. Parametri del Problema
+function [A, t, U] = buildsyntheticdata(options)
+    % File denominato come richiesto dalla consegna
+    %% Parametri del problema
     arguments
-        options.n_nodi (1,1) double = 20            % Numero di nodi (vertici)
-        options.n_esperimenti (1,1) double = NaN    % Default dinamico
-        options.n_t (1,1) double = 50               % Numero di istanti temporali
-        options.t_finale (1,1) double = 0.1         % Tempo finale di osservazione (piccolo per l'euristica)
-        options.soglia_rumore (1,1) double = 1e-4    % Ordine di grandezza del rumore
-        options.prob_edge (1,1) double = 0.3        % Probabilità di creare un arco 
+        options.n_nodi (1,1) double = 20 % Numero di nodi (vertici)
+        options.n_esperimenti (1,1) double = NaN % Preallocato spazio per il numero di esperimenti
+        options.n_t (1,1) double = 50 % Numero di istanti temporali
+        options.t_finale (1,1) double = 0.1 % Tempo finale di osservazione (piccolo per l'euristica)
+        options.soglia_rumore (1,1) double = 1e-4 % Ordine di grandezza del rumore
+        options.prob_edge (1,1) double = 0.3 % Probabilità di creare un arco 
     end
     
     % Gestione del default dinamico per n_esperimenti
@@ -19,43 +19,41 @@ function [A, t, U] = genera_dati_diffusione(options)
     n_esperimenti = options.n_esperimenti;
     t_finale = options.t_finale;
     n_t = options.n_t;
-    t = linspace(0, t_finale, n_t); % Vettore dei tempi
+    t = linspace(0, t_finale, n_t); % Vettore dei tempi con istanti equispaziati
     prob_edge = options.prob_edge; 
     
-    %% 2. Generazione del Grafo e del Laplaciano
-    A = double(rand(n_nodi,n_nodi) < prob_edge);  % imposta 1 se superata probabilità 0 altrimenti
-    A = triu(A,1); % triangolare superiore scartando la diagonale
+    %% Generazione del grafo e del Laplaciano
+    A = double(rand(n_nodi,n_nodi) < prob_edge);  % Imposta 1 se supera la probabilità, 0 altrimenti
+    A = triu(A,1); % Triangolare superiore scartando la diagonale
     A = A | A'; % Rendiamo la matrice simmetrica (grafo non orientato)
-    
     
     % Calcolo della matrice Laplaciana L = D - A
     L = laplacian(graph(A));
     
     % Diagonalizzazione del Laplaciano: L = Q * Lambda * Q'
-    [Q, Lambda] = eig(full(L)); 
+    % Otteniamo autovettori in Q e autovalori in Lambda tramite "eig"
+    [Q, Lambda] = eig(full(L)); % Rendiamo tramite "full" la matrice non sparsa perchè "eig" lo richiede
     
-    %% 3. Generazione dei Dati Iniziali (U{1})
+    %% Generazione dei dati iniziali (U{1} o "u(0)")
     % U{1} è una matrice m x M dove ogni colonna è un esperimento al tempo 1
     U = cell(1, n_t);
     U{1} = randn(n_nodi, n_esperimenti); 
     
-    %% 4. Simulazione della Diffusione (Riempimento della cella U)
-    % Usiamo la formula: u(t) = Q * exp(-Lambda * t) * Q' * u(0)
+    %% Simulazione della diffusione (riempimento della cell U)
     % Calcoliamo l'evoluzione per ogni istante temporale k
     
-    Qt = Q'; %salviamo Q trasposta per non ricalcolarla dentro il ciclo
+    Qt = Q'; % Salviamo Q trasposta per non ricalcolarla dentro il ciclo
 
     for k = 2:n_t
-        
         % Calcoliamo la matrice esponenziale e^(-Lambda * t)
         exp_Lambda_t = diag(exp(-diag(Lambda) * t(k)));
         
         % Calcoliamo lo snapshot al tempo k per tutti gli M esperimenti
+        % Usiamo la formula: u(t) = Q * exp(-Lambda * t) * Q' * u(0)
         U{k} = Q * exp_Lambda_t * Qt * U{1};
         
-        % (Opzionale) Aggiunta di rumore bianco per testare la robustezza
+        % Aggiunta di rumore bianco per testare la robustezza (opzionale)
         rumore = options.soglia_rumore * randn(n_nodi, n_esperimenti); 
         U{k} = U{k} + rumore;
     end
-
 end

@@ -1,5 +1,5 @@
 function [A_rec] = solutore_sliding(U, t, options)
-    
+    %% INIZIALIZZAZIONE
     arguments
         U (:,:) cell
         t (:,1) double
@@ -17,16 +17,14 @@ function [A_rec] = solutore_sliding(U, t, options)
     istanti_inizio = 1 : step : (n_t - window + 1);
     n_finestre = length(istanti_inizio);
     n_tot_colonne = n_esperimenti * n_finestre;
-    
-    % --- PREALLOCAZIONE ---
+
     % Prepariamo i "contenitori" giganti con le dimensioni finali
     m_accumulata = zeros(n_nodi, n_tot_colonne);
     U_accumulata = zeros(n_nodi, n_tot_colonne);
     
-    % 1. SLIDING WINDOW: facciamo scorrere la finestra su tutto il tempo n_t
+    %% 1. SLIDING WINDOW: facciamo scorrere la finestra su tutto il tempo n_t
     % Ci fermiamo a n_t - k per non uscire dai bordi
     for start_t = 1 : n_finestre
-        
         idx_window = start_t : (start_t + window - 1);
         t_window = t(idx_window);
         
@@ -52,21 +50,18 @@ function [A_rec] = solutore_sliding(U, t, options)
         U_accumulata(:, col_start:col_end) = U_local;
     end
 
-    
-
-    %% 2. Proiezione Globale (La tua logica Moore-Penrose)
+    %% Proiezione globale
     % Adesso abbiamo una matrice U_accumulata che contiene la "storia" 
     % di come ogni nodo è stato visto acceso/spento in ogni finestra.
     c = pinv(U_accumulata, options.soglia_rumore); 
     
-    % derivate: [n_nodi x n_nodi]
+    % Derivate: [n_nodi x n_nodi]
     L = m_accumulata * c;
     
-    %% 3. Post-Processing (K-means)
+    %% Post-Processing (K-means)
     L(1:n_nodi+1:end) = 0;
     L = max(0, (L + L') / 2);
     
-    %% 5. K-means (L'unica parte necessariamente iterativa sui nodi)
     % Trasformiamo la matrice in un vettore colonna di tutti i possibili archi
     v_global = L(:); 
     
@@ -77,6 +72,7 @@ function [A_rec] = solutore_sliding(U, t, options)
     [~, cluster_vicini] = max(C);
     A_rec = reshape(idx_global == cluster_vicini, n_nodi, n_nodi);
     
+    % Rendiamo simmetrico il grafo (elimina falsi positivi)
     A_rec = A_rec & A_rec';
     A_rec(1:n_nodi+1:end) = 0;
 end

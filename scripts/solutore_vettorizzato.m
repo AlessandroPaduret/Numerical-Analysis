@@ -70,6 +70,7 @@ function [A_rec] = solutore_vettorizzato(U, t, options)
     [~, cluster_vicini] = max(C);
     A_rec = reshape(idx_global == cluster_vicini, n_nodi, n_nodi);
     
-    A_rec = A_rec & A_rec';
-    A_rec(1:n_nodi+1:end) = 0;
+    % Rendiamo simmetrico il grafo
+    A_rec = A_rec & A_rec'; % Eliminiamo falsi positivi tramite AND (1&0 = 0, 1&1 = 1)
+    A_rec(1:n_nodi+1:end) = 0; % Azzeriamo la diagonale
 end

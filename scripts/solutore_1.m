@@ -47,7 +47,7 @@ function [A_rec] = solutore_1(U, t, options)
         end
     end
     
-    % Rendiamo simmetrico il grafo (elimina falsi positivi)
-    A_rec = A_rec & A_rec'; 
-    A_rec(1:n_nodi+1:end) = 0;
+    % Rendiamo simmetrico il grafo
+    A_rec = A_rec & A_rec'; % Eliminiamo falsi positivi tramite AND (1&0 = 0, 1&1 = 1)
+    A_rec(1:n_nodi+1:end) = 0; % Azzeriamo la diagonale
 end

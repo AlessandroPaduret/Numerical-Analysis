@@ -1,6 +1,6 @@
 clear;
 
-[ A, t, U ] = buildsyntheticdata(n_nodi=40,n_esperimenti=40,n_t=50);
+[ A, t, U ] = buildsyntheticdata(n_nodi=40,n_esperimenti=20,n_t=50);
 
 % CAMBIARE IL NUMERO DI ESPERIMENTI SOPRA!
 A_rec = solutore_1(U, t);

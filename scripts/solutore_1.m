@@ -10,7 +10,7 @@ function [A_rec] = solutore_1(U, t, options)
 
     %% Calcolo traiettorie
     % Risolve Uc = I tramite SVD
-    c = pinv(U{1});
+    c = pinv(U{1}, options.soglia_rumore);
     
     % Calcoliamo le derivate (U{2}*c - U{1}*c) / dt
     % Nota: U{1}*c = I per come è definita c
